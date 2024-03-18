@@ -2,22 +2,36 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import Table from "react-bootstrap/Table";
 import { fetchAllUser } from "../Services/UserServices";
+import ReactPaginate from "react-paginate";
+import ModalAddNew from "./ModalAddNew";
 
 const TableUsers = () => {
   const [ListUsers, setListUsers] = useState([]);
-  useEffect(() => {
-    getUsers();
-  }, []);
+  const [totalPage, settotalPage] = useState(0);
 
-  const getUsers = async () => {
-    let res = await fetchAllUser();
-    if (res && res.data && res.data.data) {
-      setListUsers(res.data.data);
+  useEffect(() => {
+    getUsers(1);
+  }, []);
+  const handleUpdateTable = (user) => {
+    setListUsers([user, ...ListUsers]);
+  };
+
+  const getUsers = async (page) => {
+    let res = await fetchAllUser(page);
+    if (res && res.data) {
+      setListUsers(res.data);
+      settotalPage(res.total_pages);
     }
+  };
+
+  const handlePageClick = (event) => {
+    getUsers(+event.selected + 1);
   };
 
   return (
     <>
+      <ModalAddNew handleUpdateTable={handleUpdateTable} />
+
       <div className="container">
         <Table striped bordered hover>
           <thead>
@@ -33,7 +47,7 @@ const TableUsers = () => {
               ListUsers.length > 0 &&
               ListUsers.map((item, index) => {
                 return (
-                  <tr key={`user` - index}>
+                  <tr key={index}>
                     <td>{item.id}</td>
                     <td>{item.first_name}</td>
                     <td>{item.last_name}</td>
@@ -43,6 +57,26 @@ const TableUsers = () => {
               })}
           </tbody>
         </Table>
+        <div className="d-flex justify-content-center">
+          <ReactPaginate
+            breakLabel="..."
+            nextLabel="next >"
+            onPageChange={handlePageClick}
+            pageRangeDisplayed={5}
+            pageCount={totalPage}
+            previousLabel="< previous"
+            pageClassName="page-item"
+            pageLinkClassName="page-link"
+            previousClassName="page-item"
+            previousLinkClassName="page-link"
+            nextClassName="page-item"
+            nextLinkClassName="page-link"
+            breakClassName="page-item"
+            breakLinkClassName="page-link"
+            containerClassName="pagination"
+            activeClassName="active"
+          />
+        </div>
       </div>
     </>
   );
